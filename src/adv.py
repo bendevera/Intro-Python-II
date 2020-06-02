@@ -1,6 +1,7 @@
 from room import Room
 from player import Player
 from monster import Monster
+import random
 
 # Declare all the rooms
 room = {
@@ -24,7 +25,7 @@ earlier adventurers. The only exit is to the south.""", items=["key"], visit_poi
     'castle': Room("Castle", "Known to hold treasure", items=["treasure"]),
     'garden': Room("Garden", "Lookout for traps",  visit_points=-5)
 }
-room_list = room.keys()
+room_list = list(room.keys())
 
 
 # Link rooms together
@@ -38,14 +39,37 @@ room['narrow'].link_rooms(n=room['treasure'], w=room['foyer'])
 room['treasure'].link_rooms(s=room['narrow'])
 
 
+def get_random_room(rooms, room_list):
+    return rooms[room_list[random.randint(0, len(room_list)-1)]]
+
+def get_adjacent_room(room: Room):
+    directions = ["n", "s", "e", "w"]
+    while True:
+        direction = directions[random.randint(0, 3)]
+        if room.is_room(direction):
+            return room.get_room(direction)
+
 # Make a new player object that is currently in the 'outside' room.
 players_name = input("Player's name: ")
+monster_count = int(input("Monster count: "))
 my_player = Player(players_name, room['outside'])
+monster_list = []
+for i in range(monster_count):
+    monster_list.append(Monster(str(i), get_random_room(room, room_list)))
 
 # Write a loop to play the game.
 while True:
     move = input("-----> ").strip()
     if move == "q":
-        print("Goodbye.")
-        exit()
-    my_player.make_move(move)
+        my_player.end_game()
+    elif move == "show monster":
+        for elem in monster_list:
+            print(elem.room.name)
+    else:
+        my_player.make_move(move)
+        for elem in monster_list:
+            if elem.room.name == my_player.room.name:
+                damage = elem.attack()
+                my_player.take_damage(damage)
+            elem.change_room(get_adjacent_room(elem.room))
+

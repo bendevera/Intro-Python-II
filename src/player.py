@@ -7,6 +7,7 @@ console = Console()
 class Player:
     def __init__(self, name: str, room: Room):
         self.name = name
+        self.health = 100
         self.points = 0
         self.turns = 0
         self.visited = {}
@@ -33,7 +34,7 @@ class Player:
         else:
             self.__invalid_move("Move must consist of 2 parts seperated by a space.")
         
-        console.print(f"[bold magenta]Turn: {self.turns}[/bold magenta] | :coin: :money: [green]{self.points}[/green]")
+        console.print(f"[bold magenta]Turn: {self.turns}[/bold magenta] | [bold blue]Points: {self.points}[/bold blue] | [bold green]Health: {self.health}[/bold green]")
         print()
         console.print("Current room:")
         self.room.show_data()
@@ -62,6 +63,12 @@ class Player:
                 self.turns += 1
             except Exception as e:
                 self.__invalid_move(f"{noun} is not a valid index for current room.")
+        elif action == "drop":
+            try:
+                self.drop_item(int(noun)-1)
+                self.turns += 1
+            except:
+                self.__invalid_move(f"{noun} is not a valid item index.")
         else:
             self.__invalid_move(f"{action} is not a valid action.")
 
@@ -93,8 +100,22 @@ class Player:
         self.show_items()
     
     def drop_item(self, item_index):
-        try:
-            self.room.items.append(self.items[item_index])
-            self.items[item_index] = None
-        except:
-            self.__invalid_move(f"{item_index} is not a valid item index.")
+        self.room.items.append(self.items[item_index])
+        self.items[item_index] = None
+    
+    def take_damage(self, damage: int):
+        console.print("Hit by monster!!")
+        if "sword" in self.items:
+            console.print(f"[red]Loosing {damage * .5} health[red].")
+            self.health -= damage * .5
+        else:
+            console.print(f"[red]Loosing {damage} health[red].")
+            self.health -= damage
+        if self.health < 0:
+            console.print("[bold red]Took too much damage![/bold red]")
+            self.end_game()
+    
+    def end_game(self):
+        console.print(f"[bold magenta]Turn: {self.turns}[/bold magenta] | [green]Points: {self.points}[/green]")
+        console.print("[bold red]Goodbye.[/bold red]")
+        exit()
