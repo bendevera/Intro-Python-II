@@ -1,5 +1,6 @@
-from room import Room 
+from room import Room
 from rich.console import Console
+import random
 
 console = Console()
 
@@ -19,26 +20,29 @@ class Player:
     def __help(self):
         console.print("[bold cyan]Welcome to a python adventure.[/bold cyan]")
         console.print("Moves consist of an [u]action[/u] and [u]noun[/u].")
-        console.print("Actions: [green]run[/green], [green]check[/green], [green]grab[/green]")
+        console.print(
+            "Actions: [green]run[/green], [green]check[/green], [green]grab[/green]")
         console.print("Nouns: [i]n[/i], [i]s[/i], [i]e[/i], [i]w[/i]")
-        print("\n\n")
-    
+        print("\n")
+
     def __invalid_move(self, details=""):
         console.print(f"[red]Invalid move. {details} Try again.[/red]")
         print("\n")
-    
+
     def make_move(self, move: str):
         move_pieces = move.split(" ")
         if len(move_pieces) == 2:
             self.process_move(move_pieces[0], move_pieces[1])
         else:
-            self.__invalid_move("Move must consist of 2 parts seperated by a space.")
-        
-        console.print(f"[bold magenta]Turn: {self.turns}[/bold magenta] | [bold blue]Points: {self.points}[/bold blue] | [bold green]Health: {self.health}[/bold green]")
+            self.__invalid_move(
+                "Move must consist of 2 parts seperated by a space.")
+
+        console.print(
+            f"[bold magenta]Turn: {self.turns}[/bold magenta] | [bold blue]Points: {self.points}[/bold blue] | [bold green]Health: {self.health}[/bold green]")
         print()
         console.print("Current room:")
         self.room.show_data()
-    
+
     def process_move(self, action: str, noun: str):
         if action == "run":
             can_move = self.room.is_room(noun)
@@ -61,8 +65,9 @@ class Player:
             try:
                 self.grab_item(int(noun)-1)
                 self.turns += 1
-            except Exception as e:
-                self.__invalid_move(f"{noun} is not a valid index for current room.")
+            except:
+                self.__invalid_move(
+                    f"{noun} is not a valid index for current room.")
         elif action == "drop":
             try:
                 self.drop_item(int(noun)-1)
@@ -77,17 +82,20 @@ class Player:
         if room.name not in self.visited:
             self.visited[room.name] = True
             self.points += room.visit_points
-    
+        else:
+            self.points += int(room.visit_points * .25)
+
     def show_items(self):
-        console.print(f"[bold magenta]1. {self.items[0]} | 2. {self.items[1]} | 3. {self.items[2]}[/bold magenta]")
+        console.print(
+            f"[bold magenta]1. {self.items[0]} | 2. {self.items[1]} | 3. {self.items[2]}[/bold magenta]")
         print("\n")
-    
+
     def grab_item(self, item_index: int):
         item = self.room.items.pop(item_index)
         self.set_item(item)
-    
+
     def set_item(self, item_name: str):
-        item_set = False 
+        item_set = False
         for i in range(len(self.items)):
             if self.items[i] is None:
                 self.items[i] = item_name
@@ -98,24 +106,38 @@ class Player:
             self.drop_item(dropped_item - 1)
         print("New inventory:")
         self.show_items()
-    
+
     def drop_item(self, item_index):
         self.room.items.append(self.items[item_index])
         self.items[item_index] = None
-    
+
     def take_damage(self, damage: int):
         console.print("Hit by monster!!")
-        if "sword" in self.items:
-            console.print(f"[red]Loosing {damage * .5} health[red].")
-            self.health -= damage * .5
-        else:
-            console.print(f"[red]Loosing {damage} health[red].")
-            self.health -= damage
-        if self.health < 0:
+        console.print(f"[red]Loosing {damage} health[red].")
+        self.health -= damage
+        if self.health <= 0:
             console.print("[bold red]Took too much damage![/bold red]")
             self.end_game()
     
+    def defend_attack(self, damage: int):
+        if "sword" in self.items or "hatchet" in self.items:
+            damage = int(damage / 2)
+        console.print(f"[red]MONSTER ATTACK[red].")
+        answer = random.randint(1, 6)
+        while True:
+            try:
+                guess = int(input(f"Guess 1-6 to avoid {damage} damage: "))
+                break
+            except:
+                console.print("Incorrect input, try again.")
+        console.print(f"{answer} [red]vs.[/red] {guess}")
+        if answer != guess:
+            self.take_damage(damage)
+        else:
+            console.print(f"[green]Success![green] Avoided attack.")
+
     def end_game(self):
-        console.print(f"[bold magenta]Turn: {self.turns}[/bold magenta] | [green]Points: {self.points}[/green]")
+        console.print(
+            f"[bold magenta]Turn: {self.turns}[/bold magenta] | [green]Points: {self.points}[/green]")
         console.print("[bold red]Goodbye.[/bold red]")
         exit()
