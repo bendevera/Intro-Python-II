@@ -9,73 +9,13 @@ class Player:
     def __init__(self, name: str, room: Room):
         self.name = name
         self.health = 100
+        self.power = 0
         self.points = 0
         self.turns = 0
         self.visited = {}
         self.items = [None, None, None]
         self.change_room(room)
-        self.__help()
         self.room.show_data()
-
-    def __help(self):
-        console.print("[bold cyan]Welcome to a python adventure.[/bold cyan]")
-        console.print("Moves consist of an [u]action[/u] and [u]noun[/u].")
-        console.print(
-            "Actions: [green]run[/green], [green]check[/green], [green]grab[/green]")
-        console.print("Nouns: [i]n[/i], [i]s[/i], [i]e[/i], [i]w[/i]")
-        print("\n")
-
-    def __invalid_move(self, details=""):
-        console.print(f"[red]Invalid move. {details} Try again.[/red]")
-        print("\n")
-
-    def make_move(self, move: str):
-        move_pieces = move.split(" ")
-        if len(move_pieces) == 2:
-            self.process_move(move_pieces[0], move_pieces[1])
-        else:
-            self.__invalid_move(
-                "Move must consist of 2 parts seperated by a space.")
-
-        console.print(
-            f"[bold magenta]Turn: {self.turns}[/bold magenta] | [bold blue]Points: {self.points}[/bold blue] | [bold green]Health: {self.health}[/bold green]")
-        print()
-        console.print("Current room:")
-        self.room.show_data()
-
-    def process_move(self, action: str, noun: str):
-        if action == "run":
-            can_move = self.room.is_room(noun)
-            if can_move:
-                self.change_room(self.room.get_room(noun))
-                self.turns += 1
-            else:
-                self.__invalid_move(f"Can't move {noun} of current room.")
-        elif action == "check":
-            if noun == "i":
-                self.show_items()
-            else:
-                is_room = self.room.is_room(noun)
-                if is_room:
-                    room = self.room.get_room(noun)
-                    room.show_preview()
-                else:
-                    self.__invalid_move(f"No room {noun} of current room.")
-        elif action == "grab":
-            try:
-                self.grab_item(int(noun)-1)
-                self.turns += 1
-            except:
-                self.__invalid_move(
-                    f"{noun} is not a valid index for current room.")
-        elif action == "drop":
-            try:
-                self.drop_item(int(noun)-1)
-                self.turns += 1
-            except:
-                self.__invalid_move(f"{noun} is not a valid item index.")
-        else:
-            self.__invalid_move(f"{action} is not a valid action.")
 
     def change_room(self, room: Room):
         self.room = room
@@ -117,8 +57,9 @@ class Player:
         self.health -= damage
         if self.health <= 0:
             console.print("[bold red]Took too much damage![/bold red]")
-            self.end_game()
-    
+            return False
+        return True
+
     def defend_attack(self, damage: int):
         if "sword" in self.items or "hatchet" in self.items:
             damage = int(damage / 2)
@@ -132,12 +73,8 @@ class Player:
                 console.print("Incorrect input, try again.")
         console.print(f"{answer} [red]vs.[/red] {guess}")
         if answer != guess:
-            self.take_damage(damage)
+            lived = self.take_damage(damage)
+            return lived
         else:
             console.print(f"[green]Success![green] Avoided attack.")
-
-    def end_game(self):
-        console.print(
-            f"[bold magenta]Turn: {self.turns}[/bold magenta] | [green]Points: {self.points}[/green]")
-        console.print("[bold red]Goodbye.[/bold red]")
-        exit()
+            return True

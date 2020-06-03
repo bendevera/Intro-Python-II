@@ -53,7 +53,8 @@ class Room:
         if len(self.items) > 0:
             console.print("[magenta]Items:[/magenta]")
             console.print(
-                " ".join([str(num+1)+". "+item for num, item in enumerate(self.items)]),
+                " ".join([str(num+1)+". "+item for num,
+                          item in enumerate(self.items)]),
                 justify="center")
         n = None if self.n_to is None else self.n_to.name
         s = None if self.s_to is None else self.s_to.name
